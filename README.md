@@ -1,8 +1,5 @@
 # CPU-Only Quadrupedal Locomotion Under Hardware Degradation
 
-Official implementation for the paper:  
-**"Training Walking Robots on Low-Cost Hardware: A CPU-Only Approach for African Urban Deployment"**
-
 ---
 
 ## 📌 Overview
