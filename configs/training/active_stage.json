@@ -1,0 +1,6 @@
+{
+  "active_config": "configs/training/degraded/degraded_policy_from_bc.json",
+  "stage": "degraded_policy_from_bc",
+  "experiment_id": "EXP-006B",
+  "note": "pi_D training run from BC with degradation model M_D enabled (motor strength, latency, IMU noise/bias, and friction variance)."
+}
