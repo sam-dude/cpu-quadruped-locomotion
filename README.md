@@ -34,6 +34,10 @@ cpu-quadruped-locomotion/
 │   ├── go1_train_ppo_from_bc/      # Stage 2: CPU PPO fine-tuning
 │   ├── go1_eval_paper_metrics/     # Metric logging & benchmark evaluation
 │   └── go1_eval_policy/            # Visual policy evaluation controller
+├── dataset/                        # Expert Trajectory Dataset for Behavior Cloning
+│   ├── README.md                   # Hugging Face Dataset Card
+│   ├── trajectory_data.npz         # 10,000 steps Go1 trot trajectory (36-dim obs)
+│   └── trajectory_data_window3.npz # 10,000 steps Go1 trot trajectory (108-dim obs)
 ├── utils/                          # Core Python classes
 │   ├── envs/go1_env.py             # Gymnasium Webots Env + Degradation Model
 │   ├── rewards/go1_reward.py       # Multi-objective reward formulation
@@ -52,9 +56,10 @@ cpu-quadruped-locomotion/
 │   ├── pi_bc.zip                   # Behavior cloning policy model
 │   ├── pi_clean.zip                # Clean baseline policy (pi_C)
 │   └── pi_degraded.zip             # Hardware-degraded policy (pi_D)
-└── scripts/                        # Reproducible plotting & metrics evaluation
+└── scripts/                        # Reproducible plotting & dataset tools
     ├── plot_paper_figures.py
-    └── paper_plot_constants.py
+    ├── paper_plot_constants.py
+    └── upload_to_huggingface.py
 ```
 
 ---
@@ -80,7 +85,35 @@ $env:PYTHONPATH = "$env:WEBOTS_HOME\lib\controller\python"
 
 ---
 
-### 2. Evaluating Pre-trained Policies
+### 2. Expert Trajectory Dataset (Hugging Face)
+
+The expert dataset is hosted on Hugging Face at 🤗 **[sam-dude/go1-expert-trajectories](https://huggingface.co/datasets/sam-dude/go1-expert-trajectories)**.
+
+#### Downloading Dataset from Hugging Face:
+```python
+from huggingface_hub import hf_hub_download
+import numpy as np
+
+# Download trajectory dataset directly from Hugging Face
+file_path = hf_hub_download(
+    repo_id="sam-dude/go1-expert-trajectories",
+    filename="trajectory_data.npz",
+    repo_type="dataset"
+)
+
+data = np.load(file_path)
+print(f"Loaded {len(data['observations'])} expert steps.")
+```
+
+#### Uploading/Updating Dataset on Hugging Face:
+Run the included upload script:
+```bash
+python scripts/upload_to_huggingface.py sam-dude/go1-expert-trajectories
+```
+
+---
+
+### 3. Evaluating Pre-trained Policies
 
 Pre-trained model checkpoints are included in `pretrained/`.
 
@@ -96,12 +129,12 @@ python controllers/go1_eval_paper_metrics/go1_eval_paper_metrics.py
 
 ---
 
-### 3. Training Pipeline Reproducibility
+### 4. Training Pipeline Reproducibility
 
 #### Step 1: Expert Demonstration & Behavior Cloning ($\pi_{BC}$)
-Generate gait trajectory demonstrations and train the initial BC policy:
+Generate gait trajectory demonstrations (or use the dataset in `dataset/`) and train the initial BC policy:
 ```bash
-# 1. Collect expert trot trajectory
+# 1. Collect expert trot trajectory (optional if using dataset/)
 python controllers/go1_collect_trajectory/go1_collect_trajectory.py
 
 # 2. Train Behavior Cloning policy
@@ -133,7 +166,7 @@ python controllers/go1_train_ppo_from_bc/go1_train_ppo_from_bc.py
 
 ---
 
-### 4. Reproducing Paper Figures
+### 5. Reproducing Paper Figures
 
 To re-generate all publication-quality graphs:
 ```bash
@@ -144,7 +177,7 @@ python scripts/plot_paper_figures.py
 
 ## 📜 Citation
 
-If you find this codebase or research useful, please cite our paper:
+If you find this codebase or dataset useful, please cite our paper:
 
 ```bibtex
 @inproceedings{ibiyemi2026cpu,

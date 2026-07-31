@@ -20,18 +20,49 @@ TRAJECTORY_RUN_FOLDER_NAME = None
 BC_EPOCHS = 50
 BC_BATCH_SIZE = 64
 BC_LEARNING_RATE = 1e-3
+HF_DATASET_REPO = "sam-dude/go1-expert-trajectories"
 
 
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def resolve_trajectory_dataset() -> Path:
+    # 1. Try resolving from training_runs artifacts
+    try:
+        path = find_artifact(
+            run_folder_name=TRAJECTORY_RUN_FOLDER_NAME,
+            artifact_name="trajectory_data.npz",
+            run_prefix="run_traj",
+        )
+        if path.exists():
+            return path
+    except FileNotFoundError:
+        pass
+
+    # 2. Check local dataset/ directory
+    local_ds = workspace_root / "dataset" / "trajectory_data.npz"
+    if local_ds.exists():
+        return local_ds
+
+    # 3. Fallback: Download from Hugging Face Hub
+    print(f"Local dataset not found. Downloading expert dataset from Hugging Face ({HF_DATASET_REPO})...")
+    try:
+        from huggingface_hub import hf_hub_download
+        downloaded = hf_hub_download(
+            repo_id=HF_DATASET_REPO,
+            filename="trajectory_data.npz",
+            repo_type="dataset",
+        )
+        return Path(downloaded)
+    except Exception as e:
+        raise FileNotFoundError(
+            f"Could not load trajectory dataset locally or from Hugging Face Hub: {e}"
+        )
+
+
 def main() -> None:
-    trajectory_path = find_artifact(
-        run_folder_name=TRAJECTORY_RUN_FOLDER_NAME,
-        artifact_name="trajectory_data.npz",
-        run_prefix="run_traj",
-    )
+    trajectory_path = resolve_trajectory_dataset()
 
     run_dir = create_run_dir("run_bc")
     output_model_path = run_dir / "go1_bc_policy"
@@ -44,7 +75,6 @@ def main() -> None:
         f"run_folder={run_dir} "
         f"model={model_name}"
     )
-    print(f"BC expert data folder: {trajectory_path.parent}")
     print(f"BC expert data file: {trajectory_path}")
 
     metadata = {
