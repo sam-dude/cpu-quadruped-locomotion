@@ -72,10 +72,13 @@ print("Dataset loaded successfully!")
 
 ## 📜 Citation
 
+If you find this dataset useful in your research, please cite our working paper:
+
 ```bibtex
-@inproceedings{ibiyemi2026cpu,
+@article{ibiyemi2026cpu,
   title={Training Walking Robots on Low-Cost Hardware: A CPU-Only Approach for African Urban Deployment},
   author={Ibiyemi, Samuel and Akinremi, Bunmi},
+  journal={Preprint / Working Paper},
   year={2026}
 }
 ```
